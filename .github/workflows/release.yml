@@ -108,11 +108,11 @@ jobs:
       - run: cargo clippy --all-targets --all-features -- -D warnings -W clippy::pedantic
       - run: cargo test --all-features
       - run: cargo test --all-features --test store_contract
-      - run: cargo llvm-cov --all-features --ignore-filename-regex 'src/store/(postgres|redis_store)\.rs' --fail-under-lines 90 --lcov --output-path lcov.info
+      - run: cargo llvm-cov --all-features --ignore-filename-regex 'src/store/(postgres|redis_store)\.rs' --fail-under-lines 90 --lcov --output-path target/lcov.info
       - uses: actions/upload-artifact@v4
         with:
           name: release-coverage-lcov
-          path: lcov.info
+          path: target/lcov.info
       - run: cargo audit
       - run: cargo deny check
       - run: cargo doc --all-features --no-deps
