@@ -4,8 +4,9 @@ version = "0.1.0"
 edition = "2024"
 description = "Policy-based protection for scarce external API budgets."
 license = "MIT OR Apache-2.0"
-repository = "https://github.com/bonifacekabaso/budget-warden"
+repository = "https://github.com/boniface/budget-warden"
 readme = "README.md"
+rust-version = "1.95"
 keywords = ["budget", "rate-limit", "quota", "api", "governor"]
 categories = ["api-bindings", "asynchronous"]
 

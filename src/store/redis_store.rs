@@ -120,6 +120,7 @@ async fn finish(
         .key(EXPIRATIONS_KEY)
         .arg(status)
         .arg(id)
+        .arg(Utc::now().timestamp())
         .invoke_async(&mut connection)
         .await
         .map_err(redis_error)?;
@@ -254,6 +255,7 @@ local reservation_key = KEYS[1]
 local expirations_key = KEYS[2]
 local target_status = ARGV[1]
 local reservation_id = ARGV[2]
+local now = tonumber(ARGV[3])
 if redis.call('EXISTS', reservation_key) == 0 then
   return 0
 end
@@ -266,6 +268,14 @@ if status == 'expired' then
 end
 local counter_key = redis.call('HGET', reservation_key, 'counter_key')
 local amount = tonumber(redis.call('HGET', reservation_key, 'amount') or '0')
+local expires_at = tonumber(redis.call('HGET', reservation_key, 'expires_at') or '0')
+if expires_at <= now then
+  local reserved = tonumber(redis.call('HGET', counter_key, 'reserved') or '0') - amount
+  redis.call('HSET', counter_key, 'reserved', math.max(reserved, 0))
+  redis.call('HSET', reservation_key, 'status', 'expired')
+  redis.call('ZREM', expirations_key, reservation_id)
+  return -1
+end
 local reserved = tonumber(redis.call('HGET', counter_key, 'reserved') or '0') - amount
 redis.call('HSET', counter_key, 'reserved', math.max(reserved, 0))
 if target_status == 'committed' then

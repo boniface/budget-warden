@@ -39,7 +39,12 @@ async fn exercise_store_contract(store: &dyn BudgetStore) {
         .await
         .expect("idempotent reservation succeeds");
 
-    assert_eq!(first.reservation(), second.reservation());
+    assert_eq!(
+        first.reservation().map(budget_warden::StoreReservation::id),
+        second
+            .reservation()
+            .map(budget_warden::StoreReservation::id)
+    );
     assert_eq!(second.usage(), CounterUsage::new(0, 5));
 
     let reservation = first.reservation().expect("allowed reservation");

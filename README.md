@@ -1,9 +1,15 @@
 # budget-warden
 
-[![CI](https://github.com/bonifacekabaso/budget-warden/actions/workflows/ci.yml/badge.svg)](https://github.com/bonifacekabaso/budget-warden/actions/workflows/ci.yml)
-[![Coverage Gate](https://github.com/bonifacekabaso/budget-warden/actions/workflows/ci.yml/badge.svg?branch=main&event=push)](https://github.com/bonifacekabaso/budget-warden/actions/workflows/ci.yml)
-[![Security Gate](https://github.com/bonifacekabaso/budget-warden/actions/workflows/ci.yml/badge.svg?branch=main&event=push)](https://github.com/bonifacekabaso/budget-warden/actions/workflows/ci.yml)
-[![crates.io](https://img.shields.io/crates/v/budget-warden.svg)](https://crates.io/crates/budget-warden)
+[![CI](https://github.com/boniface/budget-warden/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/boniface/budget-warden/actions/workflows/ci.yml)
+[![Scheduled Security](https://github.com/boniface/budget-warden/actions/workflows/scheduled-security.yml/badge.svg?branch=main)](https://github.com/boniface/budget-warden/actions/workflows/scheduled-security.yml)
+[![Release](https://github.com/boniface/budget-warden/actions/workflows/release.yml/badge.svg)](https://github.com/boniface/budget-warden/actions/workflows/release.yml)
+[![Crates.io](https://img.shields.io/crates/v/budget-warden.svg)](https://crates.io/crates/budget-warden)
+[![Docs.rs](https://docs.rs/budget-warden/badge.svg)](https://docs.rs/budget-warden)
+[![License](https://img.shields.io/crates/l/budget-warden.svg)](https://github.com/boniface/budget-warden#license)
+[![Rust Version](https://img.shields.io/badge/rust-1.95%2B-blue.svg)](https://github.com/boniface/budget-warden/blob/main/Cargo.toml)
+[![Rust Edition](https://img.shields.io/badge/edition-2024-blue.svg)](https://doc.rust-lang.org/edition-guide/rust-2024/)
+[![Coverage Gate](https://img.shields.io/badge/coverage%20gate-90%25-brightgreen.svg)](https://github.com/boniface/budget-warden/actions/workflows/ci.yml)
+[![Dependencies](https://deps.rs/repo/github/boniface/budget-warden/status.svg)](https://deps.rs/repo/github/boniface/budget-warden)
 
 `budget-warden` is a Rust library for protecting applications from exhausting scarce third-party API budgets. It answers a simple question before a live call is made: should this request spend budget now, use a fallback, wait, downgrade, or be rejected?
 
