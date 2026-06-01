@@ -1,0 +1,19 @@
+[[policies]]
+name = "newsapi-daily-free-plan"
+provider = "newsapi"
+domain = "news"
+resource = "top-headlines"
+subject = "global"
+unit = "requests"
+hard_limit = 100
+exhausted_action = "use_stale_cache"
+fail_mode = "closed"
+
+[policies.window]
+type = "calendar_day"
+timezone = "America/Toronto"
+
+[policies.strategy]
+type = "preserve_for_window"
+max_spend_ahead_percent = 5
+emergency_reserve_percent = 20

@@ -1,0 +1,20 @@
+[[policies]]
+name = "serpapi-monthly-free-plan"
+provider = "serpapi"
+domain = "search"
+resource = "google-search"
+subject = "global"
+unit = "requests"
+hard_limit = 250
+exhausted_action = "use_stale_cache"
+fail_mode = "closed"
+
+[policies.window]
+type = "calendar_month"
+timezone = "America/Toronto"
+
+[policies.strategy]
+type = "preserve_for_window"
+max_spend_ahead_percent = 10
+emergency_reserve_percent = 20
+minimum_remaining_units = 10
