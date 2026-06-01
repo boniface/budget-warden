@@ -1,12 +1,18 @@
+use std::sync::atomic::{AtomicU64, Ordering};
+use std::time::{SystemTime, UNIX_EPOCH};
+
 use budget_warden::{
     BudgetStore, BudgetUnit, CounterUsage, IdempotencyKey, MemoryStore, ReserveRequest, StoreKey,
 };
 use chrono::{Duration, Utc};
 
-fn store_key() -> StoreKey {
+static UNIQUE_COUNTER: AtomicU64 = AtomicU64::new(1);
+
+fn store_key(suffix: &str) -> StoreKey {
     let key =
-        budget_warden::BudgetKey::new("serpapi", "search", "google", "global").expect("valid key");
-    StoreKey::new("policy".to_owned(), key, BudgetUnit::Requests)
+        budget_warden::BudgetKey::new("serpapi", "search", "google", format!("global-{suffix}"))
+            .expect("valid key");
+    StoreKey::new(format!("policy-{suffix}"), key, BudgetUnit::Requests)
 }
 
 fn window() -> budget_warden::WindowBounds {
@@ -15,10 +21,12 @@ fn window() -> budget_warden::WindowBounds {
 }
 
 async fn exercise_store_contract(store: &dyn BudgetStore) {
-    let key = store_key();
+    let suffix = unique_suffix("contract");
+    let key = store_key(&suffix);
     let window = window();
     let now = Utc::now();
-    let idempotency_key = IdempotencyKey::new("contract-request-1").expect("valid key");
+    let idempotency_key =
+        IdempotencyKey::new(format!("contract-request-{suffix}")).expect("valid key");
     let request = ReserveRequest {
         key: &key,
         amount: 5,
@@ -65,7 +73,8 @@ async fn exercise_store_contract(store: &dyn BudgetStore) {
 }
 
 async fn exercise_expired_commit_contract(store: &dyn BudgetStore) {
-    let key = store_key();
+    let suffix = unique_suffix("expired");
+    let key = store_key(&suffix);
     let window = window();
     let now = Utc::now() - Duration::seconds(2);
     let result = store
@@ -170,4 +179,12 @@ fn live_service_url(name: &'static str) -> Option<String> {
             panic!("{name} must be set for live integration tests: {error}");
         }
     }
+}
+
+fn unique_suffix(label: &str) -> String {
+    let sequence = UNIQUE_COUNTER.fetch_add(1, Ordering::Relaxed);
+    let timestamp = SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .map_or(0, |duration| duration.as_nanos());
+    format!("{label}-{}-{sequence}-{timestamp}", std::process::id())
 }
