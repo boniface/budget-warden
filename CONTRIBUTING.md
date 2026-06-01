@@ -86,3 +86,15 @@ Update documentation when public behavior changes:
 - Public API changes are documented.
 - `CHANGELOG.md` is updated.
 - No unrelated formatting churn or refactors are included.
+
+## Release Workflow
+
+Releases use the manual GitHub Actions `Release` workflow.
+
+1. Update `Cargo.toml` and `CHANGELOG.md`.
+2. Run `make dev`.
+3. Run `cargo publish --dry-run`.
+4. Trigger the `Release` workflow from `main` with `mode=dry-run`.
+5. Trigger the same workflow with `mode=publish` after the dry run passes.
+
+The workflow requires a `CARGO_REGISTRY_TOKEN` repository or `crates-io` environment secret. Do not use local publishing for normal releases.

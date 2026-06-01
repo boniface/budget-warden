@@ -2,14 +2,43 @@ name: Release
 
 on:
   workflow_dispatch:
-  push:
-    tags:
-      - "v*.*.*"
+    inputs:
+      version:
+        description: "Version to release, without a leading v, for example 0.1.0"
+        required: true
+        type: string
+      mode:
+        description: "Run validation only, or publish budget-warden and create the GitHub release"
+        required: true
+        default: dry-run
+        type: choice
+        options:
+          - dry-run
+          - publish
+      release_summary:
+        description: "Optional short summary prepended to generated GitHub release notes"
+        required: false
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release-${{ inputs.version }}
+  cancel-in-progress: false
+
+env:
+  BUDGET_WARDEN_POSTGRES_URL: postgres://postgres:postgres@localhost:5432/budget_warden
+  BUDGET_WARDEN_REDIS_URL: redis://localhost:6379
+  BUDGET_WARDEN_REQUIRE_LIVE: "1"
+  CARGO_TERM_COLOR: always
+  RELEASE_MODE: ${{ inputs.mode }}
+  RELEASE_VERSION: ${{ inputs.version }}
 
 jobs:
-  publish:
+  validate:
+    name: Validate Release
     runs-on: ubuntu-latest
-    environment: crates-io
     services:
       postgres:
         image: postgres:16
@@ -33,28 +62,111 @@ jobs:
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
-    env:
-      BUDGET_WARDEN_POSTGRES_URL: postgres://postgres:postgres@localhost:5432/budget_warden
-      BUDGET_WARDEN_REDIS_URL: redis://localhost:6379
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
       - uses: dtolnay/rust-toolchain@stable
       - uses: taiki-e/install-action@cargo-llvm-cov
-      - uses: taiki-e/install-action@cargo-deny
       - uses: taiki-e/install-action@cargo-audit
+      - uses: taiki-e/install-action@cargo-deny
+      - name: Validate version input
+        run: |
+          case "$RELEASE_VERSION" in
+            v*)
+              echo "Use a plain semver version like 0.1.0, not $RELEASE_VERSION."
+              exit 1
+              ;;
+            ""|*[!0-9A-Za-z.+-]*)
+              echo "Invalid version: $RELEASE_VERSION"
+              exit 1
+              ;;
+          esac
+
+          if ! printf '%s\n' "$RELEASE_VERSION" | grep -Eq '^[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.-]+)?(\+[0-9A-Za-z.-]+)?$'; then
+            echo "Version must be valid semver, for example 0.1.0 or 1.2.3-rc.1."
+            exit 1
+          fi
+
+          if [ "$RELEASE_MODE" = "publish" ] && [ "$GITHUB_REF_NAME" != "main" ]; then
+            echo "Publish releases must be run from main. Current ref: $GITHUB_REF_NAME."
+            exit 1
+          fi
+
+          if [ "$RELEASE_MODE" = "publish" ] && git rev-parse -q --verify "refs/tags/v$RELEASE_VERSION" >/dev/null; then
+            echo "Tag v$RELEASE_VERSION already exists."
+            exit 1
+          fi
+
+          if ! grep -q "^version = \"$RELEASE_VERSION\"$" Cargo.toml; then
+            echo "Cargo.toml package version must be $RELEASE_VERSION."
+            exit 1
+          fi
       - run: cargo fmt --all -- --check
+      - run: cargo check --no-default-features
+      - run: cargo check --all-features --examples
       - run: cargo clippy --all-targets --all-features -- -D warnings -W clippy::pedantic
       - run: cargo test --all-features
       - run: cargo test --all-features --test store_contract
       - run: cargo llvm-cov --all-features --ignore-filename-regex 'src/store/(postgres|redis_store)\.rs' --fail-under-lines 90 --lcov --output-path lcov.info
       - uses: actions/upload-artifact@v4
         with:
-          name: coverage-lcov
+          name: release-coverage-lcov
           path: lcov.info
       - run: cargo audit
       - run: cargo deny check
       - run: cargo doc --all-features --no-deps
       - run: cargo publish --dry-run
-      - run: cargo publish --token "$CRATES_IO_TOKEN"
+
+  dry-run:
+    name: Dry Run Summary
+    runs-on: ubuntu-latest
+    needs: validate
+    if: ${{ inputs.mode == 'dry-run' }}
+    steps:
+      - run: |
+          echo "Release dry run completed for $RELEASE_VERSION."
+          echo "No crate was published and no GitHub release was created."
+
+  publish-crate:
+    name: Publish Crate
+    runs-on: ubuntu-latest
+    needs: validate
+    if: ${{ inputs.mode == 'publish' }}
+    environment: crates-io
+    steps:
+      - uses: actions/checkout@v6
+      - uses: dtolnay/rust-toolchain@stable
+      - name: Validate crates.io token
         env:
-          CRATES_IO_TOKEN: ${{ secrets.CRATES_IO_TOKEN }}
+          CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
+        run: |
+          if [ -z "$CARGO_REGISTRY_TOKEN" ]; then
+            echo "CARGO_REGISTRY_TOKEN repository or environment secret is required."
+            exit 1
+          fi
+      - name: Publish budget-warden
+        env:
+          CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
+        run: |
+          cargo publish --dry-run
+          cargo publish
+
+  github-release:
+    name: Create GitHub Release
+    runs-on: ubuntu-latest
+    needs: publish-crate
+    if: ${{ inputs.mode == 'publish' }}
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+      - uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ inputs.version }}
+          name: budget-warden ${{ inputs.version }}
+          target_commitish: ${{ github.sha }}
+          body: ${{ inputs.release_summary }}
+          generate_release_notes: true

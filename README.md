@@ -252,7 +252,7 @@ Runnable examples live in `examples/`:
 
 ## Release
 
-Releases are published to crates.io through CI/CD only. The crates.io token must be stored as a CI secret and never committed to the repository.
+Releases are published to crates.io through the manual `Release` GitHub Actions workflow only. The crates.io token must be stored as the `CARGO_REGISTRY_TOKEN` repository or `crates-io` environment secret and never committed to the repository.
 
 Release checklist:
 
@@ -260,6 +260,8 @@ Release checklist:
 2. Update `CHANGELOG.md`.
 3. Run `make dev`.
 4. Run `cargo publish --dry-run`.
-5. Create an approved `vMAJOR.MINOR.PATCH` tag.
-6. Publish through the release workflow.
-7. Yank a bad release with `cargo yank --vers <version>` and publish a corrected patch release.
+5. Open the `Release` workflow from the `main` branch.
+6. Enter the plain semver version, for example `0.1.0`.
+7. Run `mode=dry-run` first and review the validation result.
+8. Run `mode=publish` to publish `budget-warden` to crates.io and create the GitHub release/tag.
+9. Yank a bad release with `cargo yank --vers <version>` and publish a corrected patch release.
