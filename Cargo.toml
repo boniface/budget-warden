@@ -1,6 +1,6 @@
 [package]
 name = "budget-warden"
-version = "0.1.0"
+version = "0.1.2"
 edition = "2024"
 description = "Policy-based protection for scarce external API budgets."
 license = "MIT OR Apache-2.0"
