@@ -64,7 +64,7 @@ let policy = BudgetPolicy::builder("serpapi-monthly-free-plan")
     .subject("global")
     .unit(BudgetUnit::Requests)
     .hard_limit(250)
-    .calendar_month("America/Toronto")
+    .calendar_month("Africa/Lusaka")
     .strategy(BudgetStrategy::PreserveForWindow(PreserveForWindow::new(
         10,
         20,
@@ -189,7 +189,7 @@ fail_mode = "closed"
 
 [policies.window]
 type = "calendar_month"
-timezone = "America/Toronto"
+timezone = "Africa/Lusaka"
 
 [policies.strategy]
 type = "preserve_for_window"
@@ -261,7 +261,7 @@ Release checklist:
 3. Run `make dev`.
 4. Run `cargo publish --dry-run`.
 5. Open the `Release` workflow from the `main` branch.
-6. Enter the plain semver version, for example `0.1.0`.
+6. Enter the plain semver version, for example `0.1.3`.
 7. Run `mode=dry-run` first and review the validation result.
 8. Run `mode=publish` to publish `budget-warden` to crates.io and create the GitHub release/tag.
 9. Yank a bad release with `cargo yank --vers <version>` and publish a corrected patch release.

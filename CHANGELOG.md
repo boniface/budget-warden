@@ -6,6 +6,8 @@ This project follows semantic versioning once releases are published. Until the 
 
 ## [Unreleased]
 
+## [0.1.3] - 2026-06-13
+
 ### Added
 
 - Core budget broker API with `authorize`, `reserve`, `usage`, `policies`, and `report`.
@@ -23,7 +25,3 @@ This project follows semantic versioning once releases are published. Until the 
 
 - Added `cargo audit` and `cargo deny` gates.
 - Kept secret loading outside the library; host applications provide already-created stores or connection pools.
-
-## [0.1.0] - Unreleased
-
-Initial crate release is pending.

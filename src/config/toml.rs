@@ -64,7 +64,7 @@ fail_mode = "closed"
 
 [policies.window]
 type = "calendar_month"
-timezone = "America/Toronto"
+timezone = "Africa/Lusaka"
 
 [policies.strategy]
 type = "preserve_for_window"

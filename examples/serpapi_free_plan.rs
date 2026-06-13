@@ -12,7 +12,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .subject("global")
         .unit(BudgetUnit::Requests)
         .hard_limit(250)
-        .calendar_month("America/Toronto")
+        .calendar_month("Africa/Lusaka")
         .strategy(BudgetStrategy::PreserveForWindow(PreserveForWindow::new(
             10,
             20,

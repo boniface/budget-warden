@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       version:
-        description: "Version to release, without a leading v, for example 0.1.0"
+        description: "Version to release, without a leading v, for example 0.1.3"
         required: true
         type: string
       mode:
@@ -74,7 +74,7 @@ jobs:
         run: |
           case "$RELEASE_VERSION" in
             v*)
-              echo "Use a plain semver version like 0.1.0, not $RELEASE_VERSION."
+              echo "Use a plain semver version like 0.1.3, not $RELEASE_VERSION."
               exit 1
               ;;
             ""|*[!0-9A-Za-z.+-]*)
@@ -84,7 +84,7 @@ jobs:
           esac
 
           if ! printf '%s\n' "$RELEASE_VERSION" | grep -Eq '^[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.-]+)?(\+[0-9A-Za-z.-]+)?$'; then
-            echo "Version must be valid semver, for example 0.1.0 or 1.2.3-rc.1."
+            echo "Version must be valid semver, for example 0.1.3 or 1.2.3-rc.1."
             exit 1
           fi
 
